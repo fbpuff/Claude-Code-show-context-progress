@@ -26,7 +26,7 @@ my-project | claude-sonnet-4-6 | ███░░░░░░░░░░░░�
 1. 下载脚本：
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/fengzb7-cyber/Claude-Code-show-context-progress/master/statusline.py -o ~/.claude/statusline.py
+curl -fsSL https://raw.githubusercontent.com/fbpuff/Claude-Code-show-context-progress/master/statusline.py -o ~/.claude/statusline.py
 ```
 
 2. 在 `~/.claude/settings.json` 中添加：
@@ -52,7 +52,7 @@ curl -fsSL https://raw.githubusercontent.com/fengzb7-cyber/Claude-Code-show-cont
 2. 下载脚本：
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/fengzb7-cyber/Claude-Code-show-context-progress/master/statusline.sh -o ~/.claude/statusline.sh
+curl -fsSL https://raw.githubusercontent.com/fbpuff/Claude-Code-show-context-progress/master/statusline.sh -o ~/.claude/statusline.sh
 chmod +x ~/.claude/statusline.sh
 ```
 
