@@ -1,6 +1,6 @@
 #!/bin/bash
-# Claude Code statusline — directory | model | progress bar | context usage
-# Displays: myproject | claude-sonnet-4-6 | ███░░░░░░░░░░░░░░░░░ 15% used / 85% remaining
+# Claude Code Status Line Script
+# Displays: directory | model | progress bar | context usage
 
 input=$(cat)
 dir=$(echo "$input" | jq -r '.cwd | sub(".*[/\\\\]"; "")')
@@ -8,7 +8,7 @@ model=$(echo "$input" | jq -r '.model.display_name')
 used=$(echo "$input" | jq -r '.context_window.used_percentage // "0"')
 remaining=$(echo "$input" | jq -r '.context_window.remaining_percentage // "?"')
 
-# Progress bar: 20 chars wide (each block = 5%)
+# Progress bar: 20 chars wide
 bar_width=20
 filled=$(( used * bar_width / 100 ))
 [ "$filled" -gt "$bar_width" ] && filled=$bar_width

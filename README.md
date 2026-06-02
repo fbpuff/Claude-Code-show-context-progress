@@ -8,8 +8,6 @@
 my-project | claude-sonnet-4-6 | ███░░░░░░░░░░░░░░░░░ 15% used / 85% remaining
 ```
 
-### 显示内容说明
-
 | 部分 | 示例 | 说明 |
 |------|------|------|
 | 目录名 | `my-project` | 当前工作目录的 basename |
@@ -17,40 +15,48 @@ my-project | claude-sonnet-4-6 | ███░░░░░░░░░░░░�
 | 进度条 | `███░░░░░░░░░░░░░░░░░` | 20 格，█=已用（每格 5%），░=剩余 |
 | 百分比 | `15% used / 85% remaining` | 已用和剩余的精确百分比 |
 
-## 前置要求
+---
 
-- **jq** — JSON 解析工具
-- **bash** — 运行脚本
+## 安装
 
-### 安装 jq
+### Python 脚本（推荐，跨平台，零依赖）
 
-| 系统 | 命令 |
-|------|------|
-| Windows (winget) | `winget install jqlang.jq` |
-| macOS (Homebrew) | `brew install jq` |
-| Linux (apt) | `sudo apt install jq` |
+**前置要求：** Python 3
 
-## 安装步骤
-
-### 1. 安装 jq（如已安装可跳过）
-
-| 系统 | 命令 |
-|------|------|
-| Windows (winget) | `winget install jqlang.jq` |
-| macOS (Homebrew) | `brew install jq` |
-| Linux (apt) | `sudo apt install jq` |
-
-### 2. 下载并安装
+1. 下载脚本：
 
 ```bash
-# 下载脚本到 ~/.claude/ 目录
-curl -fsSL https://raw.githubusercontent.com/fbpuff/Claude-Code-show-context-progress/master/statusline.sh -o ~/.claude/statusline.sh
+curl -fsSL https://raw.githubusercontent.com/fengzb7-cyber/Claude-Code-show-context-progress/master/statusline.py -o ~/.claude/statusline.py
+```
+
+2. 在 `~/.claude/settings.json` 中添加：
+
+```json
+{
+  "statusLine": {
+    "type": "command",
+    "command": "python3 ~/.claude/statusline.py"
+  }
+}
+```
+
+### Bash 脚本（需要 jq）
+
+**前置要求：** bash、jq
+
+1. 安装 jq：
+   - Windows: `winget install jqlang.jq`
+   - macOS: `brew install jq`
+   - Linux: `sudo apt install jq`
+
+2. 下载脚本：
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/fengzb7-cyber/Claude-Code-show-context-progress/master/statusline.sh -o ~/.claude/statusline.sh
 chmod +x ~/.claude/statusline.sh
 ```
 
-### 3. 配置 settings.json
-
-在 `~/.claude/settings.json` 中添加 `statusLine` 配置：
+3. 配置 `settings.json`：
 
 ```json
 {
@@ -61,41 +67,104 @@ chmod +x ~/.claude/statusline.sh
 }
 ```
 
-如果已存在其他配置，只需将 `statusLine` 部分合并进去。
+---
 
-> **Windows 用户**：如果 `bash` 不在 PATH 中，将 `command` 改为 `"C:\\Program Files\\Git\\bin\\bash.exe ~/.claude/statusline.sh"`。
+## Windows 配置详解
 
-### 4. 重启 Claude Code
+### 关键：Unix 路径格式
 
-重启后在终端底部即可看到：
+> ⚠️ Claude Code 在 Windows 上使用 **Git Bash** 执行命令，所以路径必须使用 Unix 格式
+> `/c/Users/xxx/...`，**不能**使用 `C:\Users\xxx\...`（反斜杠在 bash 中会被当作转义符）。
 
+**正确格式：**
+
+```json
+{
+  "statusLine": {
+    "type": "command",
+    "command": "/c/Users/<用户名>/AppData/Local/Programs/Python/Python313/python.exe /c/Users/<用户名>/.claude/statusline.py"
+  }
+}
 ```
-my-project | claude-sonnet-4-6 | ███░░░░░░░░░░░░░░░░░ 15% used / 85% remaining
+
+### 如果你使用 ccswitch
+
+ccswitch 切换供应商时会覆盖 `settings.json`。推荐以下方法：
+
+**方法 A：使用 `settings.local.json`（推荐）**
+
+将配置放在 `~/.claude/settings.local.json`，ccswitch **永远不会**覆盖此文件：
+
+```json
+{
+  "permissions": {
+    "allow": [
+      "Bash(/c/Users/<用户名>/AppData/Local/Programs/Python/Python313/python.exe *)"
+    ]
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "/c/Users/<用户名>/AppData/Local/Programs/Python/Python313/python.exe /c/Users/<用户名>/.claude/statusline.py"
+  }
+}
 ```
+
+**方法 B：在 ccswitch 通用配置中添加**
+
+ccswitch → Claude 设置 → 通用配置（Common Config），添加上述 `statusLine` JSON 片段，会对所有供应商生效。
+
+---
+
+## 常见问题
+
+### Q: 状态栏完全不显示？
+
+1. **验证 JSON 格式** — 用 `python -c "import json; json.load(open('~/.claude/settings.json'))"` 检查
+2. **测试脚本**：
+   ```bash
+   echo '{"cwd":"test","model":{"display_name":"test"},"context_window":{"used_percentage":10,"remaining_percentage":90}}' | python3 ~/.claude/statusline.py
+   ```
+3. **检查路径格式** — Windows 上必须是 Unix 路径 (`/c/Users/...`)
+
+### Q: ccswitch 切换后状态栏消失？
+
+使用 `settings.local.json`（见上方"方法 A"）。
+
+### Q: 进度条字符显示乱码（Windows 中文环境）？
+
+Python 脚本已内置 UTF-8 输出修复。如果遇到 `UnicodeEncodeError: 'gbk' codec can't encode character`，确认使用的是最新的 `statusline.py`。
+
+### Q: 显示 `bash: command not found`？
+
+配置中使用了 `bash` 但系统执行的是 WSL bash。改用 Python 脚本，或指定完整 Git Bash 路径。
+
+---
 
 ## 工作原理
 
-Claude Code 每次刷新状态栏时，会将当前会话的 JSON 数据通过 stdin 传给脚本，脚本用 jq 提取字段并格式化输出。
+Claude Code 每次刷新状态栏时，将当前会话 JSON 通过 stdin 传给脚本，脚本解析后输出一行文本显示在终端底部。
 
-JSON 字段参考：
-- `.cwd` — 当前工作目录
-- `.model.display_name` — 模型显示名称
-- `.context_window.used_percentage` — 上下文已用百分比
-- `.context_window.remaining_percentage` — 上下文剩余百分比
+JSON 输入字段：
+
+| 字段 | 说明 |
+|------|------|
+| `.cwd` | 当前工作目录 |
+| `.model.display_name` | 模型显示名称 |
+| `.context_window.used_percentage` | 上下文已用百分比 |
+| `.context_window.remaining_percentage` | 上下文剩余百分比 |
 
 ## 自定义
 
-修改 `statusline.sh` 中的变量即可调整显示：
+- **进度条宽度**：修改 `statusline.py` 中的 `bar_width = 20`
+- **输出格式**：修改最后一行的 `print` 语句
+- **去掉进度条**：改为 `print(f"{dir_name} | {model} | {used}% used / {remaining}% remaining")`
 
-```bash
-bar_width=20   # 进度条宽度（格数）
-```
+## 文件
 
-也可以调整 `echo` 行的输出格式，比如去掉进度条只保留百分比：
-
-```bash
-echo "${dir} | ${model} | ${used}% used / ${remaining}% remaining"
-```
+| 文件 | 说明 | 推荐 |
+|------|------|------|
+| `statusline.py` | Python 版本 | ✅ 推荐，无外部依赖，跨平台 |
+| `statusline.sh` | Bash 版本 | Linux/macOS，需要 jq |
 
 ## 许可
 
