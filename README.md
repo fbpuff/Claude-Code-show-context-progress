@@ -32,17 +32,23 @@ my-project | claude-sonnet-4-6 | ███░░░░░░░░░░░░�
 
 ## 安装步骤
 
-### 1. 下载脚本
+### 1. 安装 jq（如已安装可跳过）
 
-将 `statusline.sh` 放到 `~/.claude/` 目录下：
+| 系统 | 命令 |
+|------|------|
+| Windows (winget) | `winget install jqlang.jq` |
+| macOS (Homebrew) | `brew install jq` |
+| Linux (apt) | `sudo apt install jq` |
+
+### 2. 下载并安装
 
 ```bash
-mkdir -p ~/.claude
-cp statusline.sh ~/.claude/statusline.sh
+# 下载脚本到 ~/.claude/ 目录
+curl -fsSL https://raw.githubusercontent.com/fbpuff/Claude-Code-show-context-progress/master/statusline.sh -o ~/.claude/statusline.sh
 chmod +x ~/.claude/statusline.sh
 ```
 
-### 2. 配置 settings.json
+### 3. 配置 settings.json
 
 在 `~/.claude/settings.json` 中添加 `statusLine` 配置：
 
@@ -55,13 +61,17 @@ chmod +x ~/.claude/statusline.sh
 }
 ```
 
-如果已存在其他配置，只需将 `statusLine` 部分合并进去即可。
+如果已存在其他配置，只需将 `statusLine` 部分合并进去。
 
-> **Windows 用户**：如果 `bash` 不在 PATH 中，将路径改为 `"C:\\Program Files\\Git\\bin\\bash.exe"` 或 Git Bash 的实际安装路径。
+> **Windows 用户**：如果 `bash` 不在 PATH 中，将 `command` 改为 `"C:\\Program Files\\Git\\bin\\bash.exe ~/.claude/statusline.sh"`。
 
-### 3. 重启 Claude Code
+### 4. 重启 Claude Code
 
-重启后即可在终端底部看到状态栏。
+重启后在终端底部即可看到：
+
+```
+my-project | claude-sonnet-4-6 | ███░░░░░░░░░░░░░░░░░ 15% used / 85% remaining
+```
 
 ## 工作原理
 
