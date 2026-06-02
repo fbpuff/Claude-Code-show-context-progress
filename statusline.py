@@ -12,7 +12,10 @@ remaining = data.get('context_window', {}).get('remaining_percentage', '?')
 # Progress bar: 20 chars wide
 bar_width = 20
 filled = min(int(used) * bar_width // 100, bar_width)
-empty = bar_width - filled
+empty = max(bar_width - filled, 0)
 bar = '█' * filled + '░' * empty
 
-print(f"{dir_name} | {model} | {bar} {used}% used / {remaining}% remaining")
+if int(used) > 100:
+    print(f"{dir_name} | {model} | {bar} {used}% used (overflow)")
+else:
+    print(f"{dir_name} | {model} | {bar} {used}% used / {remaining}% remaining")
