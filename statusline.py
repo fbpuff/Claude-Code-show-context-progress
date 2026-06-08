@@ -6,32 +6,54 @@ sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 data = json.load(sys.stdin)
 dir_name = os.path.basename(data.get('cwd', '?'))
 model = data.get('model', {}).get('display_name', '?')
-used = data.get('context_window', {}).get('used_percentage', 0)
-remaining = data.get('context_window', {}).get('remaining_percentage', '?')
 ctx = data.get('context_window', {})
+used_pct = int(ctx.get('used_percentage', 0))
+total_input = ctx.get('total_input_tokens', 0)
+total_output = ctx.get('total_output_tokens', 0)
+current = ctx.get('current_usage', {})
+ctx_used = current.get('input_tokens', 0) + current.get('output_tokens', 0)
+ctx_total = ctx.get('context_window_size', 0)
 
-# Progress bar: 20 chars wide
+# --- ANSI colors ---
+GREEN  = '\033[32m'
+YELLOW = '\033[33m'
+RED    = '\033[31m'
+DIM    = '\033[2m'
+RESET  = '\033[0m'
+
+# --- Color threshold ---
+if used_pct < 60:
+    color = GREEN
+elif used_pct < 85:
+    color = YELLOW
+else:
+    color = RED
+
+# --- Progress bar ---
 bar_width = 20
-filled = min(int(used) * bar_width // 100, bar_width)
-empty = max(bar_width - filled, 0)
-bar = "█" * filled + "░" * empty
+filled = min(used_pct * bar_width // 100, bar_width)
+empty  = bar_width - filled
+bar = f"{color}{'█' * filled}{RESET}{DIM}{'░' * empty}{RESET}"
 
-# Detect provider
-extra = ""
-model_lower = model.lower()
+# --- Token formatter ---
+def fmt(n):
+    if n >= 1_000_000:
+        return f"{n/1_000_000:.1f}M"
+    if n >= 1_000:
+        return f"{n/1_000:.0f}k"
+    return str(n)
 
-if "glm" in model_lower:
-    # GLM / 智谱AI: show token usage
-    tu = ctx.get("tokens_used", 0)
-    tt = ctx.get("tokens_total", 0)
-    if tu and tt:
-        extra = f"tokens {tu}/{tt}"
-    else:
-        extra = f"tokens {ctx}"  # fallback: show what we have
+# --- I/O tokens ---
+io_str = ""
+if total_input:
+    io_str = f" │ {DIM}↓{RESET}{fmt(total_input)}"
+    if total_output:
+        io_str += f" {DIM}↑{RESET}{fmt(total_output)}"
 
-# Build output
-parts = [f"{dir_name} | {model} | {bar} {used}% used / {remaining}% remaining"]
-if extra:
-    parts.append(extra)
+# --- Context tokens ---
+ctx_str = ""
+if ctx_used and ctx_total:
+    ctx_str = f" │ {DIM}{fmt(ctx_used)}/{fmt(ctx_total)}{RESET}"
 
-print(" | ".join(parts))
+# --- Output ---
+print(f"[{model}] │ {dir_name}{io_str} │ {bar} {color}{used_pct}%{RESET}{ctx_str}")
